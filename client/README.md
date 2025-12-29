@@ -1,73 +1,45 @@
-# React + TypeScript + Vite
+# GhostVault
+### Zero-Knowledge Encrypted File Transfer
+**Engineered by Harry Sandhu**
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Stack](https://img.shields.io/badge/Stack-React%20%7C%20Node%20%7C%20WebCrypto-blueviolet)](https://github.com/hsandhu01)
 
-Currently, two official plugins are available:
+> "The server should be a dumb storage bucket. It should never know what it holds."
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+GhostVault is a security-focused file sharing tool designed to demonstrate **cryptographic principles** in a modern web architecture. Unlike standard file uploaders, GhostVault encrypts files in the browser using the **Web Crypto API (AES-GCM)** before transmission. The server receives only an opaque binary blob and has **zero knowledge** of the decryption key.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## How It Works (The "Zero-Knowledge" Protocol)
 
-## Expanding the ESLint configuration
+1.  **Client-Side Encryption:** When a user selects a file, the browser generates a random **256-bit AES-GCM key**.
+2.  **Stream Encryption:** The file is encrypted in memory. We use GCM (Galois/Counter Mode) to ensure both confidentiality and integrity.
+3.  **Opaque Upload:** The encrypted binary blob (IV + Ciphertext) is uploaded to the Node.js server.
+4.  **The "Magic Link":** The application generates a shareable URL containing the decryption key in the **URL Fragment (Hash)**.
+    * *Example:* `https://ghostvault.app/files/123#<SECRET_KEY>`
+    * **Security Note:** Browsers do *not* send the fragment (everything after `#`) to the server. The key never leaves the user's device via HTTP.
+5.  **Client-Side Decryption:** When the recipient opens the link, the browser extracts the key from the URL, fetches the blob, and decrypts it locally.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠 Tech Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+* **Frontend:** React, TypeScript, Vite
+* **Cryptography:** Native Web Crypto API (SubtleCrypto) - *No external heavy crypto libraries.*
+* **Backend:** Node.js, Express
+* **Storage:** Multer (Stream-based disk storage)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Local Setup
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+```bash
+# 1. Clone the repository
+git clone [https://github.com/hsandhu01/ghost-vault.git](https://github.com/hsandhu01/ghost-vault.git)
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+# 2. Install & Start Server (Port 3000)
+cd server
+npm install
+node index.js
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+# 3. Install & Start Client (Port 5173)
+cd ../client
+npm install
+npm run dev
